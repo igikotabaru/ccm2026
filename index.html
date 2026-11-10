@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengumuman Babak Penyisihan CCM</title>
+    <!-- Library PapaParse untuk membaca file CSV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --background: #f3f4f6;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        h2 { color: #1f2937; margin-bottom: 25px; }
+        input {
+            width: 100%; padding: 15px; margin-bottom: 20px;
+            border: 2px solid #e5e7eb; border-radius: 8px; font-size: 16px;
+            box-sizing: border-box; transition: border-color 0.3s;
+        }
+        input:focus { outline: none; border-color: var(--primary); }
+        button {
+            background-color: var(--primary); color: white; border: none;
+            padding: 15px 30px; border-radius: 8px; font-size: 16px;
+            font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s;
+        }
+        button:hover { background-color: #1d4ed8; }
+        .loading { display: none; margin-top: 20px; color: #6b7280; font-style: italic; }
+        .result-box { margin-top: 25px; padding: 20px; border-radius: 8px; text-align: left; display: none; }
+        .result-lolos { background-color: #dcfce7; border: 1px solid #bbf7d0; color: #166534; }
+        .result-gagal { background-color: #fee2e2; border: 1px solid #fecaca; color: #991b1b; }
+        .btn-sertif {
+            display: inline-block; background-color: #4b5563; color: white;
+            padding: 10px 15px; border-radius: 6px; text-decoration: none;
+            margin-top: 10px; margin-right: 10px; font-size: 14px; transition: 0.3s;
+        }
+        .btn-sertif:hover { background-color: #374151; }
+        .sertif-container { margin-top: 20px; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Cek Hasil CCM</h2>
+    <input type="text" id="inputTim" placeholder="Masukkan Nama Tim Anda (cth: Alpha)">
+    <button onclick="cekHasil()">Lihat Hasil</button>
+    
+    <div id="loading" class="loading">Memeriksa data...</div>
+    <div id="hasilData" class="result-box"></div>
+</div>
+
+<script>
+    let database = [];
+
+    // Membaca file data.csv saat halaman dimuat
+    window.onload = function() {
+        Papa.parse("data.csv", {
+            download: true,
+            header: false, // Membaca berdasarkan urutan index (0, 1, 2, dst)
+            complete: function(results) {
+                database = results.data;
+                console.log("Data berhasil dimuat.");
+            },
+            error: function() {
+                console.error("Gagal memuat file CSV. Pastikan file bernama data.csv ada di folder yang sama.");
+            }
+        });
+    };
+
+    function cekHasil() {
+        const teamNameInput = document.getElementById("inputTim").value.trim().toLowerCase();
+        const hasilDiv = document.getElementById("hasilData");
+        const loading = document.getElementById("loading");
+
+        if (teamNameInput === "") {
+            alert("Nama tim tidak boleh kosong!");
+            return;
+        }
+
+        if (database.length === 0) {
+            alert("Sistem masih memuat data atau file CSV tidak ditemukan. Coba beberapa detik lagi.");
+            return;
+        }
+
+        // Reset tampilan
+        hasilDiv.style.display = "none";
+        loading.style.display = "block";
+        
+        setTimeout(() => {
+            loading.style.display = "none";
+            hasilDiv.style.display = "block";
+            hasilDiv.className = "result-box"; 
+
+            let found = false;
+            let dataPeserta = {};
+
+            // Looping data mulai dari baris ke-2 (index 1) untuk melewati header
+            for (let i = 1; i < database.length; i++) {
+                // Berdasarkan urutan CSV terbaru, Nama Tim ada di Kolom ke-3 (index 2)
+                if (database[i].length > 2 && database[i][2]) {
+                    const currentTeam = database[i][2].toString().trim().toLowerCase();
+                    
+                    if (currentTeam === teamNameInput) {
+                        found = true;
+                        // Memetakan data sesuai urutan kolom CSV terbaru
+                        dataPeserta = {
+                            namaSekolah: database[i][0],  // Kolom A
+                            kecamatan: database[i][1],    // Kolom B
+                            namaTim: database[i][2],      // Kolom C
+                            peserta1: database[i][3],     // Kolom D
+                            peserta2: database[i][4],     // Kolom E
+                            nilai: database[i][5],        // Kolom F
+                            peringkat: database[i][6],    // Kolom G
+                            status: database[i][7],       // Kolom H
+                            linkSertif1: database[i][8],  // Kolom I
+                            linkSertif2: database[i][9]   // Kolom J
+                        };
+                        break;
+                    }
+                }
+            }
+
+            if (!found) {
+                hasilDiv.innerHTML = "<p style='text-align:center; font-weight:bold;'>❌ Nama Tim tidak ditemukan.<br><span style='font-weight:normal; font-size:14px;'>Pastikan ejaan sudah benar sesuai saat pendaftaran.</span></p>";
+            } else {
+                let htmlContent = "";
+                const statusLolos = dataPeserta.status ? dataPeserta.status.toLowerCase().trim() : "";
+
+                if (statusLolos === "lolos") {
+                    hasilDiv.classList.add("result-lolos");
+                    htmlContent = `
+                        <h3 style="margin-top:0;">Selamat! 🎉</h3>
+                        <p>Tim <b>${dataPeserta.namaTim}</b> utusan dari <b>${dataPeserta.namaSekolah}</b> meraih Peringkat <b>${dataPeserta.peringkat}</b>.</p>
+                        <p style="font-weight:bold; font-size:18px;">Anda dinyatakan LOLOS ke babak Semi Final!</p>
+                    `;
+                } else {
+                    hasilDiv.classList.add("result-gagal");
+                    htmlContent = `
+                        <h3 style="margin-top:0;">Terima kasih! 💪</h3>
+                        <p>Tim <b>${dataPeserta.namaTim}</b> utusan dari <b>${dataPeserta.namaSekolah}</b> mendapatkan nilai <b>${dataPeserta.nilai}</b> (Peringkat <b>${dataPeserta.peringkat}</b>).</p>
+                        <p>Jangan patah semangat, jadikan ini sebagai batu loncatan untuk kompetisi berikutnya!</p>
+                    `;
+                }
+
+                // Bagian tombol sertifikat
+                htmlContent += `
+                    <div class="sertif-container">
+                        <p style="font-weight:bold; margin-bottom: 10px;">Unduh E-Sertifikat Peserta:</p>
+                        <a href="${dataPeserta.linkSertif1}" target="_blank" class="btn-sertif">📄 ${dataPeserta.peserta1}</a>
+                        <a href="${dataPeserta.linkSertif2}" target="_blank" class="btn-sertif">📄 ${dataPeserta.peserta2}</a>
+                    </div>
+                `;
+
+                hasilDiv.innerHTML = htmlContent;
+            }
+        }, 300);
+    }
+</script>
+
+</body>
+</html>
