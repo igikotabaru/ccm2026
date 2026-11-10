@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pengumuman Babak Penyisihan CCM</title>
-    <!-- Library PapaParse untuk membaca file CSV -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         :root {
@@ -72,11 +71,10 @@
 <script>
     let database = [];
 
-    // Membaca file data.csv saat halaman dimuat
     window.onload = function() {
         Papa.parse("data.csv", {
             download: true,
-            header: false, // Membaca berdasarkan urutan index (0, 1, 2, dst)
+            header: false,
             complete: function(results) {
                 database = results.data;
                 console.log("Data berhasil dimuat.");
@@ -102,7 +100,6 @@
             return;
         }
 
-        // Reset tampilan
         hasilDiv.style.display = "none";
         loading.style.display = "block";
         
@@ -114,26 +111,23 @@
             let found = false;
             let dataPeserta = {};
 
-            // Looping data mulai dari baris ke-2 (index 1) untuk melewati header
             for (let i = 1; i < database.length; i++) {
-                // Berdasarkan urutan CSV terbaru, Nama Tim ada di Kolom ke-3 (index 2)
                 if (database[i].length > 2 && database[i][2]) {
                     const currentTeam = database[i][2].toString().trim().toLowerCase();
                     
                     if (currentTeam === teamNameInput) {
                         found = true;
-                        // Memetakan data sesuai urutan kolom CSV terbaru
                         dataPeserta = {
-                            namaSekolah: database[i][0],  // Kolom A
-                            kecamatan: database[i][1],    // Kolom B
-                            namaTim: database[i][2],      // Kolom C
-                            peserta1: database[i][3],     // Kolom D
-                            peserta2: database[i][4],     // Kolom E
-                            nilai: database[i][5],        // Kolom F
-                            peringkat: database[i][6],    // Kolom G
-                            status: database[i][7],       // Kolom H
-                            linkSertif1: database[i][8],  // Kolom I
-                            linkSertif2: database[i][9]   // Kolom J
+                            namaSekolah: database[i][0],  
+                            kecamatan: database[i][1],    
+                            namaTim: database[i][2],      
+                            peserta1: database[i][3],     
+                            peserta2: database[i][4],     
+                            nilai: database[i][5],        
+                            peringkat: database[i][6],    
+                            status: database[i][7],       
+                            linkSertif1: database[i][8],  
+                            linkSertif2: database[i][9]   
                         };
                         break;
                     }
@@ -150,19 +144,19 @@
                     hasilDiv.classList.add("result-lolos");
                     htmlContent = `
                         <h3 style="margin-top:0;">Selamat! 🎉</h3>
-                        <p>Tim <b>${dataPeserta.namaTim}</b> utusan dari <b>${dataPeserta.namaSekolah}</b> meraih Peringkat <b>${dataPeserta.peringkat}</b>.</p>
-                        <p style="font-weight:bold; font-size:18px;">Anda dinyatakan LOLOS ke babak Semi Final!</p>
+                        <p>Tim <b>${dataPeserta.namaTim}</b> utusan dari <b>${dataPeserta.namaSekolah}</b> mendapatkan nilai <b>${dataPeserta.nilai}</b> (Peringkat <b>${dataPeserta.peringkat}</b>).</p>
+                        <p style="font-weight:bold; font-size:18px; color:#15803d;">Anda dinyatakan LOLOS ke babak Semi Final!</p>
                     `;
                 } else {
                     hasilDiv.classList.add("result-gagal");
                     htmlContent = `
                         <h3 style="margin-top:0;">Terima kasih! 💪</h3>
                         <p>Tim <b>${dataPeserta.namaTim}</b> utusan dari <b>${dataPeserta.namaSekolah}</b> mendapatkan nilai <b>${dataPeserta.nilai}</b> (Peringkat <b>${dataPeserta.peringkat}</b>).</p>
+                        <p style="font-weight:bold; font-size:16px; color:#b91c1c;">Mohon maaf, Anda dinyatakan BELUM LOLOS ke babak Semi Final.</p>
                         <p>Jangan patah semangat, jadikan ini sebagai batu loncatan untuk kompetisi berikutnya!</p>
                     `;
                 }
 
-                // Bagian tombol sertifikat
                 htmlContent += `
                     <div class="sertif-container">
                         <p style="font-weight:bold; margin-bottom: 10px;">Unduh E-Sertifikat Peserta:</p>
